@@ -1,13 +1,19 @@
-Rails.application.routes.draw do
+require 'api_constraints'
 
+Rails.application.routes.draw do
+  namespace :api, defaults: { format: :json }, constraints: { subdomain: 'api' }, path: '/'  do
+    scope module: :v1, constraints: ApiConstraints.new(version: 1, default: true) do
+      resources :users, only: :show
+    end
+  end
   resources :team_stats
   resources :player_stats
   devise_scope :user do
-    get '/users/sign_out' => 'devise/sessions#destroy' 
+    get '/users/sign_out' => 'devise/sessions#destroy'
   end
-  devise_for :users, :controllers => { :omniauth_callbacks => "users/omniauth_callbacks" }
+  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }
   root to: 'home#index'
-  resources :users, only: [:show, :index] 
+  resources :users, only: %i[show index]
   post 'users/upvote'
   post 'users/downvote'
   post 'users/unvote'
@@ -23,4 +29,6 @@ Rails.application.routes.draw do
   get 'site_stats', to: 'home#site_stats'
   resources :microposts
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+
+
 end
